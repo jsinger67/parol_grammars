@@ -1,0 +1,77 @@
+// This grammar should be able to parse expressions in propositional calculus.
+// Multiple expressions can be parsed at once.
+// Examples are:
+//      ((p -> q) & (r -> s) & (p | r)) -> q | s
+//      a -> b -> c -> d
+//      (p -> (!p & r))
+//      (!(p & q <-> !(p & q) | !q))
+%start PropCal
+%title "RaaTt grammar"
+%comment "Grammar to define expressions in propositional calculus"
+%line_comment "//"
+
+%%
+
+Not : '!'
+    ;
+
+And : '&'
+    ;
+
+Or  : '|'
+    ;
+
+Cond: '->'
+    ;
+
+BiCond
+    : '<->'
+    ;
+
+LPar: '('
+    ;
+
+RPar: ')'
+    ;
+
+Var : /[a-z][_a-zA-Z0-9]*/
+    ;
+
+// We use some operator precedence rules which are commonly used in propositional calculus to reduce
+// the number of parentheses needed.
+// Also the top level expression doesn't need to be set in parentheses.
+// Highest to lowest:
+// * Negation
+// * Conjunction
+// * Disjunction
+// * Conditional (Implication)
+// * Biconditional (BiImplication)
+PropCal
+    : { Biconditional }
+    ;
+
+Biconditional
+    : Conditional { BiCond^ Conditional }
+    ;
+
+Conditional
+    : Disjunction { Cond^ Disjunction }
+    ;
+
+Disjunction
+    : Conjunction { Or^ Conjunction }
+    ;
+
+Conjunction
+    : Factor { And^ Factor }
+    ;
+
+Negation
+    : Not^ Factor
+    ;
+
+Factor
+    : Var
+    | Negation
+    | LPar^ Biconditional RPar^
+    ;
