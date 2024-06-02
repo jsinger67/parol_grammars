@@ -1,0 +1,166 @@
+%start Rx
+%title "Rx grammar"
+%comment "A simple LL(2) regex grammar"
+%auto_ws_off
+%auto_newline_off
+%on BoundStart %enter InBound
+%on SetStart, SetStartMinus, InvSetStart, InvSetStartMinus %enter InSet
+
+%scanner InSet {
+    %on SetEnd %enter INITIAL
+    %auto_ws_off
+    %auto_newline_off
+}
+%scanner InBound {
+    %on BoundEnd %enter INITIAL
+    %auto_ws_off
+    %auto_newline_off
+}
+
+%%
+
+Rx  : Union
+    ;
+
+Union
+    : Concat Alt^ Union
+    | Concat
+    ;
+
+Concat
+    : Quant Concat
+    | Quant
+    ;
+
+// Quantifiers
+// We use separate rules for each quantifier to be able to left-factor the Group rule
+Quant
+    : Group QMark^ // QuantOpt
+    | Group Plus^ // QuantPlus
+    | Group Star^ // QuantKleene
+    | Group BoundStart^ Bound BoundEnd^ // QuantBound
+    | Group // QuantGroup
+    ;
+
+Group
+    : LParen^ Rx RParen^
+    | Term
+    ;
+
+Term: Chr
+    | Set
+    | Dot
+    ;
+
+Set : SetStarts^ Setitems SetEnd^
+    ;
+
+SetStarts
+    : SetStart
+    | SetStartMinus
+    | InvSetStart
+    | InvSetStartMinus
+    ;
+
+Setitems
+    : Setitem { Setitem }
+    ;
+
+Setitem
+    : Range
+    | ChrWithoutSetEnd
+    ;
+
+Range
+    : ChrWithoutSetEnd Minus ChrWithoutSetEnd
+    ;
+
+Bound
+    : Num
+    | Num Comma^
+    | Num Comma^ Num
+    ;
+
+Num : <InBound>/[0-9]+/
+    ;
+
+Chr : EscapedChr
+    | NonEscapedChr
+    ;
+
+ChrWithoutSetEnd
+    : EscapedChr
+    | NonEscapedChrWoSetEnd
+    ;
+
+LParen
+    : '('
+    ;
+
+RParen
+    : ')'
+    ;
+
+InvSetStartMinus
+    : '[^-'
+    ;
+
+InvSetStart
+    : '[^'
+    ;
+
+SetStartMinus
+    : '[-'
+    ;
+
+SetStart
+    : '['
+    ;
+
+BoundStart
+    : '{'
+    ;
+
+BoundEnd
+    : <InBound>'}'
+    ;
+
+SetEnd
+    : <InSet>']'
+    ;
+
+Alt : '|'
+    ;
+
+Star: '*'
+    ;
+
+QMark
+    : '?'
+    ;
+
+Plus: '+'
+    ;
+
+Minus
+    : <InSet>'-'
+    ;
+
+Comma
+    : <InBound>','
+    ;
+
+EscapedChr
+    : /\\[\.\^\$\?\*\+\|\[\]\(\)\{\}\\]/
+    ;
+
+NonEscapedChrWoSetEnd
+    : <InSet>/[^\.\^\$\?\*\+\|\[\(\)\{\}\\]/
+    ;
+
+NonEscapedChr
+    : /[^\.\^\$\?\*\+\|\[\]\(\)\{\}\\]/
+    ;
+
+Dot : '.'
+    ;
