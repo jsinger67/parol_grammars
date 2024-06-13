@@ -1,0 +1,179 @@
+// Backus-Naur Form definition according to ISO/IEC 14977:1996(E)
+// https://www.cl.cam.ac.uk/~mgk25/iso-14977.pdf
+%start Ebnf
+%title "Ebnf grammar"
+%comment "A beautiful LL(1) grammar for the Extended Backus-Naur Form"
+%block_comment '(*' '*)'
+
+%%
+
+Ebnf: Rule { Rule }
+    ;
+
+Rule: MetaIdentifier DefiningSymbol DefinitionsList TerminatorSymbol
+    ;
+
+DefinitionsList
+    : SingleDefinition { DefinitionSeparatorSymbol SingleDefinition }
+    ;
+
+SingleDefinition
+    : SyntacticTerm { ConcatenateSymbol SyntacticTerm }
+    ;
+
+SyntacticTerm
+    : SyntacticFactor [ ExceptSymbol SyntacticFactor ]
+    ;
+
+SyntacticFactor
+    : [ Integer RepetitionSymbol ] SyntacticPrimary
+    ;
+
+SyntacticPrimary
+    : OptionalSequence
+    | RepeatedSequence
+    | GroupedSequence
+    | MetaIdentifier
+    | TerminalString
+    | SpecialSequence
+    | EmptySequence
+    ;
+
+OptionalSequence
+    : StartOptionSymbol DefinitionsList EndOptionSymbol
+    ;
+
+RepeatedSequence
+    : StartRepeatSymbol DefinitionsList EndRepeatSymbol
+    ;
+
+GroupedSequence
+    : StartGroupSymbol DefinitionsList EndGroupSymbol
+    ;
+
+SpecialSequence
+    : /\?[^?]*\?/
+    ;
+
+EmptySequence
+    : 
+    ;
+
+MetaIdentifier
+    : /(?i)[a-z][a-z0-9\s]*(?-i)/
+    ;
+
+TerminalString
+    : /"[^"]*"|'[^']*'/
+    ;
+
+Integer
+    : /\d+/
+    ;
+
+DefiningSymbol
+    : '='
+    ;
+
+DefinitionSeparatorSymbol
+    : OrSymbol
+    | SlashSymbol
+    | ExclamationSymbol
+    ;
+
+OrSymbol
+    : '|'
+    ;
+
+SlashSymbol
+    : '/'
+    ;
+
+ExclamationSymbol
+    : '!'
+    ;
+
+ConcatenateSymbol
+    : ','
+    ;
+
+ExceptSymbol
+    : '-'
+    ;
+
+RepetitionSymbol
+    : '*'
+    ;
+
+StartOptionSymbol
+    : LBraSymbol
+    | LeftParenSolidusSymbol
+    ;
+
+LBraSymbol
+    : '['
+    ;
+
+LeftParenSolidusSymbol
+    : '(/'
+    ;
+
+EndOptionSymbol
+    : RBraSymbol
+    | SolidusRightParenSymbol
+    ;
+
+RBraSymbol
+    : ']'
+    ;
+
+SolidusRightParenSymbol
+    : '/)'
+    ;
+
+StartRepeatSymbol
+    : LBraceSymbol
+    | LeftParenColonSymbol
+    ;
+
+LBraceSymbol
+    : '{'
+    ;
+
+LeftParenColonSymbol
+    : '(:'
+    ;
+
+EndRepeatSymbol
+    : RBraceSymbol
+    | ColonRightParenSymbol
+    ;
+
+RBraceSymbol
+    : '}'
+    ;
+
+ColonRightParenSymbol
+    : ':)'
+    ;
+
+StartGroupSymbol
+    : '('
+    ;
+
+EndGroupSymbol
+    : ')'
+    ;
+
+TerminatorSymbol
+    : SemicolonSymbol
+    | FullStopSymbol
+    ;
+
+SemicolonSymbol
+    : ';'
+    ;
+
+FullStopSymbol
+    : '.'
+    ;
