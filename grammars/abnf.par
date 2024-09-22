@@ -1,0 +1,233 @@
+// LL(2) Grammar modified for Parol
+// Sources:
+// https://datatracker.ietf.org/doc/html/rfc5234
+// https://datatracker.ietf.org/doc/html/rfc7405
+%start Abnf
+%title "Abnf grammar"
+%comment "Augmented Backus-Naur Form grammar"
+%auto_newline_off
+%auto_ws_off
+%on LAngle %enter ScProse
+%on DQuote %enter ScString
+%on BinBase, DecBase, HexBase %enter ScNumVal
+
+%scanner ScProse {
+    %auto_newline_off
+    %auto_ws_off
+    %on RAngle %enter INITIAL
+}
+%scanner ScString {
+    %auto_newline_off
+    %auto_ws_off
+    %on DQuote %enter INITIAL
+}
+%scanner ScNumVal {
+    %auto_newline_off
+    %auto_ws_off
+    %on CWspPlus, CNl %enter INITIAL
+}
+
+%%
+
+Abnf: RuleOrCWsp { RuleOrCWsp }
+    ;
+
+RuleOrCWsp
+    : Rule
+    | [ CWspPlus ] CNl
+    ;
+
+CWspPlus
+    : <INITIAL, ScNumVal>/(((;[\t\u{20}-\u{7E}]*)?(\r\n|\r|\n))?[ \t])+/
+    ;
+
+// continues if next line starts
+// with white space
+Rule: RuleName DefinedAs Elements CNl
+    ;
+
+// basic rules definition and
+// incremental alternatives
+DefinedAs
+    : [ CWspPlus ] DefineOp [ CWspPlus ]
+    ;
+
+Elements
+    : Alternation [ CWspPlus ]
+    ;
+
+// Comment or newline
+CNl : <INITIAL, ScNumVal>/(;[\t\u{20}-\u{7E}]*)?(\r\n|\r|\n)/
+    ;
+
+Alternation
+    : Concatenation { [ CWspPlus ] '/' [ CWspPlus ] Concatenation }
+    ;
+
+Concatenation
+    : Repetition { CWspPlus Repetition }
+    ;
+
+Repetition
+    : [ Repeat ] Element
+    ;
+
+Element
+    : RuleName
+    | Group
+    | Optional
+    | CharVal
+    | NumVal
+    | ProseVal
+    | CoreRule
+    ;
+
+Group
+    : '(' [ CWspPlus ] Alternation [ CWspPlus ] ')'
+    ;
+
+Optional
+    : '[' [ CWspPlus ] Alternation [ CWspPlus ] ']'
+    ;
+
+CharVal
+    : CaseInsensitiveString
+    | CaseSenitiveString
+    ;
+
+CaseInsensitiveString
+    : [ '%i' ] QuotedString
+    ;
+
+CaseSenitiveString
+    : '%s' QuotedString
+    ;
+
+// quoted string of SP and VCHAR
+// without DQUOTE
+QuotedString
+    : DQuote [ QText ] DQuote
+    ;
+
+NumVal
+    : BinBase BinVal
+    | DecBase DecVal
+    | HexBase HexVal
+    ;
+
+// series of concatenated bit values
+// or single ONEOF range
+BinVal
+    : Bit { Bit } [ Dot Bit { Bit } { Dot Bit { Bit } } | Hyphen Bit { Bit } ]
+    ;
+
+DecVal
+    : Digit { Digit } [ Dot Digit { Digit } { Dot Digit { Digit } } | Hyphen Digit { Digit } ]
+    ;
+
+HexVal
+    : HexDigit { HexDigit }
+      [ Dot HexDigit { HexDigit } { Dot HexDigit { HexDigit } } | Hyphen HexDigit { HexDigit } ]
+    ;
+
+// bracketed string of SP and VCHAR
+// without angles
+// prose description, to be used as
+// last resort
+ProseVal
+    : LAngle [ AText ] RAngle
+    ;
+
+// -----------------------------------------------------------------------------
+// Punctuation and operators
+// -----------------------------------------------------------------------------
+Repeat
+    : /\d*\*\d*|\d+/
+    ;
+
+DefineOp
+    : /=\/?/
+    ;
+
+BinBase
+    : '%b'
+    ;
+
+DecBase
+    : '%d'
+    ;
+
+HexBase
+    : '%x'
+    ;
+
+CoreRule
+    : 'ALPHA'
+    | 'BIT'
+    | 'CHAR'
+    | 'CR'
+    | 'CRLF'
+    | 'CTL'
+    | 'DIGIT'
+    | 'DQUOTE'
+    | 'HEXDIG'
+    | 'HTAB'
+    | 'LF'
+    | 'LWSP'
+    | 'OCTET'
+    | 'SP'
+    | 'VCHAR'
+    | 'WSP'
+    ;
+
+AText
+    : <ScProse>/[\u{20}-\u{7E}-->]+/
+    ;
+
+QText
+    : <ScString>/[\u{20}-\u{7E}--"]+/
+    ;
+
+HexDigit
+    : Digit
+    | HexLetter
+    ;
+
+HexLetter
+    : <ScNumVal>/[A-Fa-f]/
+    ;
+
+LAngle
+    : '<'
+    ;
+
+RAngle
+    : <ScProse>'>'
+    ;
+
+Bit : <ScNumVal>/[01]/
+    ;
+
+DecWoBits
+    : <ScNumVal>/[2-9]/
+    ;
+
+Digit
+    : Bit
+    | DecWoBits
+    ;
+
+DQuote
+    : <INITIAL, ScString>'"'
+    ;
+
+RuleName
+    : /[a-zA-Z][a-zA-Z0-9-]*/
+    ;
+
+Dot : <ScNumVal>'.'
+    ;
+
+Hyphen
+    : <ScNumVal>'-'
+    ;
