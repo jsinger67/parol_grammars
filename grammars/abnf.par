@@ -92,14 +92,14 @@ Optional
 
 CharVal
     : CaseInsensitiveString
-    | CaseSenitiveString
+    | CaseSensitiveString
     ;
 
 CaseInsensitiveString
     : [ '%i' ] QuotedString
     ;
 
-CaseSenitiveString
+CaseSensitiveString
     : '%s' QuotedString
     ;
 
@@ -115,19 +115,54 @@ NumVal
     | HexBase HexVal
     ;
 
-// series of concatenated bit values
-// or single ONEOF range
+// series of concatenated bit values or single ONEOF range
 BinVal
-    : Bit { Bit } [ Dot Bit { Bit } { Dot Bit { Bit } } | Hyphen Bit { Bit } ]
+    : Bits [ ConcatenatedBits | RangeOfBits ]
     ;
 
+Bits: Bit { Bit }
+    ;
+
+ConcatenatedBits
+    : Dot Bits { Dot Bits }
+    ;
+
+RangeOfBits
+    : Hyphen Bits
+    ;
+
+// series of concatenated decimal values or single ONEOF range
 DecVal
-    : Digit { Digit } [ Dot Digit { Digit } { Dot Digit { Digit } } | Hyphen Digit { Digit } ]
+    : Digits [ ConcatenatedDigits | RangeOfDigits ]
     ;
 
+Digits
+    : Digit { Digit }
+    ;
+
+ConcatenatedDigits
+    : Dot Digits { Dot Digits }
+    ;
+
+RangeOfDigits
+    : Hyphen Digits
+    ;
+
+// series of concatenated hexadecimal values or single ONEOF range
 HexVal
+    : HexDigits [ ConcatenatedHexDigits | RangeOfHexDigits ]
+    ;
+
+HexDigits
     : HexDigit { HexDigit }
-      [ Dot HexDigit { HexDigit } { Dot HexDigit { HexDigit } } | Hyphen HexDigit { HexDigit } ]
+    ;
+
+ConcatenatedHexDigits
+    : Dot HexDigits { Dot HexDigits }
+    ;
+
+RangeOfHexDigits
+    : Hyphen HexDigits
     ;
 
 // bracketed string of SP and VCHAR
@@ -162,22 +197,76 @@ HexBase
     ;
 
 CoreRule
-    : 'ALPHA'
-    | 'BIT'
-    | 'CHAR'
-    | 'CR'
-    | 'CRLF'
-    | 'CTL'
-    | 'DIGIT'
-    | 'DQUOTE'
-    | 'HEXDIG'
-    | 'HTAB'
-    | 'LF'
-    | 'LWSP'
-    | 'OCTET'
-    | 'SP'
-    | 'VCHAR'
-    | 'WSP'
+    : ALPHA
+    | BIT
+    | CHAR
+    | CR
+    | CRLF
+    | CTL
+    | DIGIT
+    | DQUOTE
+    | HEXDIG
+    | HTAB
+    | LF
+    | LWSP
+    | OCTET
+    | SP
+    | VCHAR
+    | WSP
+    ;
+
+ALPHA
+    : /ALPHA(?-u:\b)/
+    ;
+
+BIT : /BIT(?-u:\b)/
+    ;
+
+CHAR: /CHAR(?-u:\b)/
+    ;
+
+CR  : /CR(?-u:\b)/
+    ;
+
+CRLF: /CRLF(?-u:\b)/
+    ;
+
+CTL : /CTL(?-u:\b)/
+    ;
+
+DIGIT
+    : /DIGIT(?-u:\b)/
+    ;
+
+DQUOTE
+    : /DQUOTE(?-u:\b)/
+    ;
+
+HEXDIG
+    : /HEXDIG(?-u:\b)/
+    ;
+
+HTAB: /HTAB(?-u:\b)/
+    ;
+
+LF  : /LF(?-u:\b)/
+    ;
+
+LWSP: /LWSP(?-u:\b)/
+    ;
+
+OCTET
+    : /OCTET(?-u:\b)/
+    ;
+
+SP  : /SP(?-u:\b)/
+    ;
+
+VCHAR
+    : /VCHAR(?-u:\b)/
+    ;
+
+WSP : /WSP(?-u:\b)/
     ;
 
 AText
