@@ -44,6 +44,20 @@ and call the parser:
 cargo run test.txt
 ```
 
+## Parol V2
+
+For `parol` in version 2 please use the variants provided in the folder `parol_v2`.
+
+If you find no specific version in this folder, the original grammar file should be fully
+compatible version 2.
+
+You can check the version of `parol` that you have installed by calling:
+
+```shell
+parol -V
+>parol 2.2.0
+```
+
 ## Contributions
 
 Any contributions are welcome. Simply fork the project, add your contributions and create a pull
